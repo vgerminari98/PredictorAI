@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão e Estilo - {{ city }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body { background-color: #f8f9fa; }
+        .weather-card { border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 40px; }
+        .header-icon { font-size: 3rem; margin-right: 15px; }
+        .list-group-item { border: none; }
+        pre.json-raw { max-height: 300px; overflow:auto; background:#f1f1f1; padding:1rem; border-radius:8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card weather-card text-center text-dark bg-white p-4">
+        <div class="card-body">
+
+            {% set city_name = city or '---' %}
+            <h1 class="card-title mb-4">
+                <span class="header-icon">🌤️</span> Previsão e Estilo: {{ city_name }}
+            </h1>
+
+            {# Normaliza chaves possíveis do JSON retornado pelo backend #}
+            {% set forecast = (data.get('Previsão Resumida') 
+                                or data.get('previsao_resumida') 
+                                or data.get('forecast') 
+                                or data.get('summary')) %}
+            {% set clothing = (data.get('Sugestão de Roupa') 
+                                or data.get('sugestao_roupa') 
+                                or data.get('clothing')) %}
+            
+            {# CORRIGIDO: Prioriza a busca da cor dentro do objeto 'clothing' #}
+            {% set color = (clothing.get('Cor Mais Apropriada') if clothing and clothing is mapping else None) %}
+            {% if not color %}
+                {% set color = (data.get('Cor Mais Apropriada') 
+                                  or data.get('cor') 
+                                  or data.get('color')) %}
+            {% endif %}
+
+            {% set activity = (data.get('Recomendação de Atividade') 
+                                 or data.get('recomendacao_atividade') 
+                                 or data.get('activity')) %}
+
+            {% if forecast %}
+            <div class="alert alert-info border-0 rounded-pill mb-4" role="alert">
+                <h4 class="alert-heading mb-0">
+                    {{ forecast if forecast is string else (forecast.get('title') if forecast.get('title') else 'Resumo') }}
+                </h4>
+                {% if forecast is string %}
+                    <p class="mb-0">{{ forecast }}</p>
+                {% else %}
+                    <p class="mb-0">{{ forecast.get('text') or forecast.get('description') or forecast }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="row mb-4">
+                <div class="col-md-7">
+                    <div class="card bg-light h-100 p-3">
+                        <h5 class="card-title text-start mb-3">👗 Sugestão de Roupa</h5>
+                        <ul class="list-group list-group-flush text-start">
+                            {% if clothing %}
+                                {# Se for string, exibe como item único; se for lista, itera; se for dict, tenta campos comuns #}
+                                {% if clothing is string %}
+                                    <li class="list-group-item bg-light">{{ clothing }}</li>
+                                {% elif clothing is mapping %}
+                                    {% for k, v in clothing.items() %}
+                                        {# Ignora a Cor Mais Apropriada aqui para não duplicar, já que será exibida abaixo #}
+                                        {% if k != 'Cor Mais Apropriada' %}
+                                            <li class="list-group-item bg-light"><strong>{{ k }}:</strong> {{ v }}</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% elif clothing is sequence %}
+                                    {% for item in clothing %}
+                                        <li class="list-group-item bg-light">{{ item }}</li>
+                                    {% else %}
+                                        <li class="list-group-item bg-light">Sem sugestões específicas.</li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="list-group-item bg-light">{{ clothing }}</li>
+                                {% endif %}
+                            {% else %}
+                                <li class="list-group-item bg-light">Sugestões não disponíveis.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="card bg-light h-100 p-3">
+                        <h5 class="card-title mb-3">🎨 Cor Mais Apropriada</h5>
+                        {% if color %}
+                            {# Se a cor for uma lista ou objeto, tenta extrair a string de descrição #}
+                            {% if color is string %}
+                                <p class="card-text">{{ color }}</p>
+                            {% elif color is mapping %}
+                                <p class="card-text">{{ color.get('name') or color.get('description') or 'Não especificada' }}</p>
+                            {% else %}
+                                <p class="card-text">Não especificada.</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="card-text">Não especificada.</p>
+                        {% endif %}
+                        <div class="color-swatches d-flex justify-content-center">
+                            {# Mostrar paleta simples baseada em cor #}
+                            {% set swatches_display = [] %}
+                            {% set color_text = color if color is string else color.get('description') if color and color is mapping else '' %}
+                            
+                            {% if color_text %}
+                                {# Tenta extrair cores hexadecimais ou nomes simples #}
+                                {% set color_list = color_text.lower().replace('(', '').replace(')', '').split(',') %}
+                                {% for c in color_list %}
+                                    {% if 'branco' in c or 'claro' in c %}
+                                        {% set swatches_display = swatches_display + ['#FFFFFF'] %}
+                                    {% elif 'preto' in c %}
+                                        {% set swatches_display = swatches_display + ['#000000'] %}
+                                    {% elif 'azul' in c %}
+                                        {% set swatches_display = swatches_display + ['#007bff'] %}
+                                    {% elif 'verde' in c %}
+                                        {% set swatches_display = swatches_display + ['#28a745'] %}
+                                    {% elif 'bege' in c or 'coral' in c %}
+                                        {% set swatches_display = swatches_display + ['#ffc107'] %}
+                                    {% elif 'cinza' in c %}
+                                        {% set swatches_display = swatches_display + ['#6c757d'] %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+
+                            {% for c in swatches_display[:4] %}
+                                <span class="badge rounded-pill mx-1 border border-dark" style="width:20px; height:20px; background: {{ c | e }};"></span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-light border border-dark mx-1" style="width:20px; height:20px;"></span>
+                                <span class="badge rounded-pill bg-primary mx-1" style="width:20px; height:20px;"></span>
+                                <span class="badge rounded-pill bg-warning mx-1" style="width:20px; height:20px;"></span>
+                                <span class="badge rounded-pill bg-success mx-1" style="width:20px; height:20px;"></span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% set activity_type = (activity.get('Tipo') or activity.get('type') or 'Tipo Indefinido') %}
+            {% set activity_details = (activity.get('Detalhes') or activity.get('details') or 'Sem detalhes.') %}
+            
+            {% set activity_class = 'bg-success' if 'livre' in activity_type.lower() else 'bg-warning text-dark' if 'parcial' in activity_type.lower() else 'bg-primary' %}
+            {% set activity_emoji = '🌳' if 'livre' in activity_type.lower() else '🏠' %}
+            
+            <div class="card {{ activity_class }} text-white p-3 mb-3">
+                <h5 class="card-title mb-3">🤸 Recomendação de Atividade</h5>
+                {% if activity %}
+                    <p class="mb-1 fw-bold fs-4">{{ activity_type }} {{ activity_emoji }}</p>
+                    <p class="card-text mb-0">{{ activity_details }}</p>
+                {% else %}
+                    <p class="mb-1 fw-bold fs-4">Sem recomendação disponível</p>
+                {% endif %}
+            </div>
+
+            <div class="text-start mt-3">
+                <h6>Dados brutos retornados pelo backend</h6>
+                <pre class="json-raw">{{ data | tojson(indent=2) }}</pre>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

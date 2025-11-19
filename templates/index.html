@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca de Cidade</title>
+    <!-- Carrega Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuração da fonte Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f9;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Card Principal para o Formulário -->
+    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl transition-all duration-300 hover:shadow-xl">
+        
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+            Buscar Dados por Cidade
+        </h1>
+        
+        <p class="text-gray-500 mb-8 text-center">
+            Insira o nome da cidade para obter informações.
+        </p>
+
+        <!--
+            O formulário envia os dados para a rota '/submit-city' usando o método GET.
+            O método GET anexa o dado 'city' à URL (ex: /submit-city?city=Sao+Paulo).
+        -->
+        <form action="/submit-city" method="GET" class="space-y-6">
+            
+            <div>
+                <label for="city-input" class="block text-sm font-medium text-gray-700 mb-2">Nome da Cidade</label>
+                <input 
+                    type="text" 
+                    id="city-input" 
+                    name="city" 
+                    required 
+                    placeholder="Ex: Rio de Janeiro"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out placeholder-gray-400"
+                >
+            </div>
+            
+            <button 
+                type="submit" 
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:scale-[1.01]"
+            >
+                Buscar
+            </button>
+
+        </form>
+
+        <!-- Mensagem de Exemplo (para feedback visual) -->
+        <div id="feedback" class="mt-8 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 rounded-lg hidden">
+            A cidade foi enviada com sucesso para o backend.
+        </div>
+
+    </div>
+    
+    <script>
+        // Adiciona um listener para prevenir o comportamento padrão e mostrar feedback
+        document.querySelector('form').addEventListener('submit', function(e) {
+            // Em uma aplicação real, você deixaria o formulário enviar os dados
+            // e o backend faria o redirecionamento ou renderização.
+            
+            // Para esta demonstração front-end:
+            // e.preventDefault();
+            // document.getElementById('feedback').classList.remove('hidden');
+            // document.getElementById('feedback').textContent = 'Enviando cidade: ' + document.getElementById('city-input').value;
+            
+            // Mas vamos deixar o formulário funcionar (action="/submit-city") para simular o envio real.
+        });
+    </script>
+</body>
+</html>
