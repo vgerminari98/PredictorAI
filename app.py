@@ -68,8 +68,6 @@ def submit_city():
     {modelo_resposta}
     """
 
-    #google_api_key="AIzaSyCszAS85dv4sdMugiAHfL-2I5-178Gzwto"
-
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         print("Aviso: GOOGLE_API_KEY não configurada. Configure via variável de ambiente.")
